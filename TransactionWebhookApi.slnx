@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="src/TransactionWebhook.Api/TransactionWebhook.Api.csproj" />
+  <Project Path="src/TransactionWebhook.Application/TransactionWebhook.Application.csproj" />
+  <Project Path="src/TransactionWebhook.Domain/TransactionWebhook.Domain.csproj" />
+  <Project Path="src/TransactionWebhook.Infrastructure/TransactionWebhook.Infrastructure.csproj" />
+  <Project Path="src/TransactionWebhook.Tests/TransactionWebhook.Tests.csproj" />
+</Solution>
