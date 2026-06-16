@@ -79,9 +79,8 @@ Update appsettings.json:
 ### 3. Apply Migrations
 
 ```powershell
-Add-Migration InitialCreate -Project TransactionWebhook.Infrastructure -StartupProject TransactionWebhook.Api
-
-Update-Database -Project TransactionWebhook.Infrastructure -StartupProject TransactionWebhook.Api
+Add-Migration InitialCreate
+Update-Database 
 ```
 
 ### 4. Run Application
