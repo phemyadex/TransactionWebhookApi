@@ -221,4 +221,97 @@ public class UnitTest1
             x => x.ExistsAsync(It.IsAny<string>()),
             Times.Never);
     }
+
+    [Fact]
+    public async Task ProcessAsync_Should_Process_Transaction_Successfully()
+    {
+        // Arrange
+        var transactionRepository = new Mock<ITransactionRepository>();
+        var derivedRecordRepository = new Mock<IDerivedRecordRepository>();
+
+        transactionRepository
+            .Setup(x => x.ExistsAsync("TXN001"))
+            .ReturnsAsync(false);
+
+
+        Transaction? savedTransaction = null;
+        DerivedRecord? savedDerivedRecord = null;
+
+
+        transactionRepository
+            .Setup(x => x.AddAsync(It.IsAny<Transaction>()))
+            .Callback<Transaction>(x => savedTransaction = x)
+            .Returns(Task.CompletedTask);
+
+
+        derivedRecordRepository
+            .Setup(x => x.AddAsync(It.IsAny<DerivedRecord>()))
+            .Callback<DerivedRecord>(x => savedDerivedRecord = x)
+            .Returns(Task.CompletedTask);
+
+
+        transactionRepository
+            .Setup(x => x.SaveChangesAsync())
+            .Returns(Task.CompletedTask);
+
+
+        var service = new TransactionService(
+            transactionRepository.Object,
+            derivedRecordRepository.Object);
+
+
+        var request = new TransactionRequest(
+            "TXN001",
+            1000m,
+            "NGN");
+
+
+        // Act
+        var exception = await Record.ExceptionAsync(
+            () => service.ProcessAsync(request));
+
+
+        // Assert
+        exception.Should().BeNull();
+
+
+        savedTransaction.Should().NotBeNull();
+        savedTransaction!.ExternalTransactionId
+            .Should()
+            .Be("TXN001");
+
+        savedTransaction.Amount
+            .Should()
+            .Be(1000m);
+
+        savedTransaction.Currency
+            .Should()
+            .Be("NGN");
+
+
+        savedDerivedRecord.Should().NotBeNull();
+
+        savedDerivedRecord!.Fee
+            .Should()
+            .Be(20m);       // 2% of 1000
+
+        savedDerivedRecord.NetAmount
+            .Should()
+            .Be(980m);
+
+
+        transactionRepository.Verify(
+            x => x.AddAsync(It.IsAny<Transaction>()),
+            Times.Once);
+
+
+        derivedRecordRepository.Verify(
+            x => x.AddAsync(It.IsAny<DerivedRecord>()),
+            Times.Once);
+
+
+        transactionRepository.Verify(
+            x => x.SaveChangesAsync(),
+            Times.Once);
+    }
 }
