@@ -162,6 +162,63 @@ public class UnitTest1
             exception.Message);
     }
 
+    [Fact]
+    public async Task ProcessAsync_Should_Throw_Exception_When_TransactionId_Is_String()
+    {
+        // Arrange
+        var transactionRepository = new Mock<ITransactionRepository>();
+        var derivedRepository = new Mock<IDerivedRecordRepository>();
 
+        var service = new TransactionService(
+            transactionRepository.Object,
+            derivedRepository.Object);
 
+        var request = new TransactionRequest(
+            "string",
+            1000m,
+            "NGN");
+
+        // Act
+        var exception = await Assert.ThrowsAsync<ArgumentException>(
+            () => service.ProcessAsync(request));
+
+        // Assert
+        Assert.Equal(
+            "Transaction ID is required.",
+            exception.Message);
+
+        transactionRepository.Verify(
+            x => x.ExistsAsync(It.IsAny<string>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task ProcessAsync_Should_Throw_Exception_When_Currency_Is_String()
+    {
+        // Arrange
+        var transactionRepository = new Mock<ITransactionRepository>();
+        var derivedRepository = new Mock<IDerivedRecordRepository>();
+
+        var service = new TransactionService(
+            transactionRepository.Object,
+            derivedRepository.Object);
+
+        var request = new TransactionRequest(
+            "TXN001",
+            1000m,
+            "string");
+
+        // Act
+        var exception = await Assert.ThrowsAsync<ArgumentException>(
+            () => service.ProcessAsync(request));
+
+        // Assert
+        Assert.Equal(
+            "Currency is required.",
+            exception.Message);
+
+        transactionRepository.Verify(
+            x => x.ExistsAsync(It.IsAny<string>()),
+            Times.Never);
+    }
 }

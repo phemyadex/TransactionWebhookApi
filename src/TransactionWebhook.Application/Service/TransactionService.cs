@@ -22,38 +22,53 @@ namespace TransactionWebhook.Application.Service
         public async Task ProcessAsync(TransactionRequest request)
         {
             if (IsInvalidString(request.TransactionId))
-                throw new ArgumentException("Valid Transaction ID is required.");
+            {
+                throw new ArgumentException(
+                    "Transaction ID is required.");
+            }
 
             if (IsInvalidString(request.Currency))
-                throw new ArgumentException("Valid Currency is required.");
+            {
+                throw new ArgumentException(
+                    "Currency is required.");
+            }
 
             if (request.Amount <= 0)
-                throw new ArgumentException("Amount must be greater than zero.");
+            {
+                throw new ArgumentException(
+                    "Amount must be greater than zero.");
+            }
 
             if (await _transactions.ExistsAsync(request.TransactionId))
+            {
                 throw new InvalidOperationException(
                     $"Transaction ID '{request.TransactionId}' already exists.");
+            }
+
 
             var transaction = new Transaction
             {
                 Id = Guid.NewGuid(),
-                ExternalTransactionId = request.TransactionId,
+                ExternalTransactionId = request.TransactionId.Trim(),
                 Amount = request.Amount,
-                Currency = request.Currency,
+                Currency = request.Currency.Trim().ToUpper(),
                 CreatedAt = DateTime.UtcNow
             };
 
+
             await _transactions.AddAsync(transaction);
 
-            var fee = request.Amount * 0.02m;
+
+            var fee = transaction.Amount * 0.02m;
 
             var derivedRecord = new DerivedRecord
             {
                 Id = Guid.NewGuid(),
                 TransactionId = transaction.Id,
                 Fee = fee,
-                NetAmount = request.Amount - fee
+                NetAmount = transaction.Amount - fee
             };
+
 
             await _derived.AddAsync(derivedRecord);
 
@@ -63,7 +78,9 @@ namespace TransactionWebhook.Application.Service
         private static bool IsInvalidString(string? value)
         {
             return string.IsNullOrWhiteSpace(value) ||
-                   value.Trim().Equals("string", StringComparison.OrdinalIgnoreCase);
+                   value.Trim()
+                        .Equals("string", StringComparison.OrdinalIgnoreCase);
+
         }
     }
 }

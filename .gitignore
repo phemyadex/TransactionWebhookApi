@@ -7,5 +7,5 @@ obj/
 *.user
 *.suo
 
-# VS Code
+ VS Code
 .vscode/
